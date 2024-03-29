@@ -228,8 +228,8 @@ BPlusTreeNode *splitBPlusTreeNode(BPlusTreeNode *root)
     newNode->children.dataptr[i-order/2-1] = root->children.dataptr[i];
 
     newNode->activeKeys = root->activeKeys = order/2;
-    root->children.dataptr[order/2]->next = NULL;
-    newNode->children.dataptr[0]->prev = NULL;
+    root->children.dataptr[order/2]->next = newNode->children.dataptr[0];
+    newNode->children.dataptr[0]->prev = root->children.dataptr[order/2];
 
     //see splitting
     // i = 0;
