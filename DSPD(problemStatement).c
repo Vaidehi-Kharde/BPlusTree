@@ -629,12 +629,60 @@ void checkStatus (Bucket *firstBucket)
     }
 }
 
+void rangeSearch(Bucket *firstBucket)
+{
+    Time start, end;
+    printf ("Enter the start time: ");
+    scanf ("%d:%d", &start.Hour, &start.Min);
+    printf ("Enter the end time: ");
+    scanf ("%d:%d", &end.Hour, &end.Min);
+
+    if (maxTime (start, end) < 1) printf ("Invalid");
+
+    Bucket *bucketPtr = firstBucket;
+    while (bucketPtr!= NULL )
+    {
+        BPlusTreeNode *root = bucketPtr->root;
+        int flag = 0;
+
+        while (root->isLeaf != 1 && flag == 0)
+        {
+            int i = 0;
+            while ( i < root->activeKeys && maxTime(root->key[i], start) > 1) i++;
+            // printf ("%d", i);
+            if ( root->children.nodeptr[i] != NULL)
+            {
+                root = root->children.nodeptr[i];
+            }
+            else flag = 1;
+        }
+
+        if (flag == 0)
+        {
+            DataNode *Node = root->children.dataptr[0];
+
+            while (Node != NULL && flag == 0)
+            {
+                Flight *flightPtr = Node->lptr;
+                while (maxTime (flightPtr->departureTime, start) > 0) flightPtr = flightPtr->next;
+                while ( flightPtr != NULL && maxTime(flightPtr->departureTime, end) >= 0) 
+                {
+                    printf ("%d:%d ", flightPtr->departureTime.Hour, flightPtr->departureTime.Min);
+                    flightPtr = flightPtr->next;
+                }
+                Node = Node->next;
+            }
+        }
+        bucketPtr = bucketPtr->next;
+    }
+}
+
 void showMenu(Bucket *firstBucket)
 {
     int option;
     do
     {
-        printf("\n\n1 - Set Current Time\n2 - Insert a Flight \n3 - Cancel Flight \n4 - Check Status \n5 - Rearrange Buckets\n6 - Show Bucket List\nPress any other key to exit\n\n");
+        printf("\n\n1 - Insert a Flight \n2 - Cancel Flight \n3 - Check Status \n4 - To search a range of flights\nPress any other key to exit\n\n");
         printf("Select option : ");
         scanf("%d", &option);
         Time temp, deptTime, ETA;
@@ -642,15 +690,6 @@ void showMenu(Bucket *firstBucket)
         switch (option)
         {
         case 1:
-            printf("Enter time: ");
-            scanf("%d", &temp.Hour);
-            scanf("%d", &temp.Min);
-            if (temp.Hour > 23 || temp.Min > 59 ) printf ("invalid time");
-            else
-                // firstBucket = setCurrentTime(firstBucket, temp);
-            break;
-
-        case 2:
             printf("Enter details for the flight to be added :\n");
             int ID;
             printf("Flight ID : ");
@@ -676,26 +715,19 @@ void showMenu(Bucket *firstBucket)
             }
             break;
 
-        case 3:
+        case 2:
             printf ("to be implemented"); 
             // firstBucket = cancelFlight(firstBucket);
             break;
 
-        case 4:
+        case 3:
             printf ("to be implemented"); 
             checkStatus(firstBucket);
             break;
-
-        case 5:
-            printf ("to be implemented"); 
-            // rearrangeBuckets(firstBucket);
-            break;
-
-        case 6:
-            printf ("to be implemented"); 
-            // showBucketList(firstBucket);
+        case 4:
+            rangeSearch(firstBucket);
         }
-    } while (option > 0 && option < 7);
+    } while (option > 0 && option < 4);
 }
 
 
@@ -715,10 +747,8 @@ int main()
         sscanf(line, "%d,%d,%d,%d,%d", &tempFlightID, &(tempETA.Hour), &(tempETA.Min), &(tempDepartureTime.Hour), &(tempDepartureTime.Min));
         planeNode = createNode(tempFlightID, tempDepartureTime, tempETA);
         firstBucket = insert(firstBucket, planeNode);
-        printf ("inserted");
         printf ("\n");
     }
-    printf ("##outside##");
     showMenu(firstBucket);
     return 0;
 }
