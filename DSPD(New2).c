@@ -196,10 +196,12 @@ void printTree(BPlusTreeNode *root)
     }
     else
     {
+        printf ("recusrion");
         i = 0;
+        printf ("%d", root->activeKeys);
         while (i <= root->activeKeys)
         {
-            printTree (root->children.nodeptr[i]);
+            if (root->children.nodeptr[i] != NULL) printTree(root->children.nodeptr[i]);
             i++;
         }
     }
@@ -293,6 +295,7 @@ BPlusTreeNode *splitBPlusTreeNode(BPlusTreeNode *root)
 
     else
     {
+        printf ("split nonroot");
         BPlusTreeNode *parent = root->parent;
         i = parent->activeKeys-1;
         while (i >= 0 && maxTime(parent->key[i], root->key[0]) < 0)
@@ -302,16 +305,48 @@ BPlusTreeNode *splitBPlusTreeNode(BPlusTreeNode *root)
             i--;
         }
         i++;
+        printf ("%d", i);
         parent->key[i] = root->key[order/2];
         parent->children.nodeptr[i] = root;
         parent->children.nodeptr[i+1] = newNode;
         parent->activeKeys++;
+        printf ("\n");
         for (i = 0; i < parent->activeKeys; i++)
         {
             printf ("%d:%d ", parent->key[i].Hour, parent->key[i].Min);
         }
+        printf ("\n");
+        for (i = 0; i <= parent->activeKeys; i++)
+        {
+            if (parent->children.nodeptr[i] != NULL)
+            {
+                BPlusTreeNode *traversalnode = parent->children.nodeptr[i];
+                for (int j = 0; j < traversalnode->activeKeys; j++)
+                {
+                    printf ("%d:%d ",traversalnode->key[j]);
+                }
+                for (int j = 0; j <= traversalnode->activeKeys; j++)
+                {
+                    printf ("Now print respective dataNodes: \n");
+                    DataNode *dataNodeTraversal = traversalnode->children.dataptr[j];
+                    if (dataNodeTraversal != NULL)
+                    {
+                        printf ("flighttraversal\n");
+                        Flight *flightTraversal = dataNodeTraversal->lptr;
+                        while (flightTraversal != NULL)
+                        {
+                            printf ("%d:%d ", flightTraversal->departureTime.Hour, flightTraversal->departureTime.Min);
+                            flightTraversal = flightTraversal->next;
+                        }
+                        printf ("\n");
+                    } 
+                }
+                printf ("\n");
+            }
+        }
         if (parent->activeKeys == order+1)
         {
+            printf ("here comes the recursion");
             parent = splitBPlusTreeNode(parent);
         }
     }
@@ -497,6 +532,8 @@ BPlusTreeNode *insertInbPlusTree(BPlusTreeNode *root, Flight *newNode)
             temp = temp->next;
             printf ("\n");
         }
+        printf ("******************Printing the tree*********************");
+        printTree (root);
     }
 
     else
@@ -509,8 +546,6 @@ BPlusTreeNode *insertInbPlusTree(BPlusTreeNode *root, Flight *newNode)
         if (i == root->activeKeys)
             root->children.nodeptr[i] = insertInbPlusTree(root->children.nodeptr[i], newNode);
     }
-    printf ("***************************************");
-    printTree (root);
     return root;
 }
 
