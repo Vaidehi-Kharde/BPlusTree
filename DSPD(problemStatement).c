@@ -243,32 +243,31 @@ void printTree(BPlusTreeNode *root)
 
 BPlusTreeNode *splitBPlusTreeNode(BPlusTreeNode *root)
 {
-    printf ("split BPlusTreeNode\n");
+    printf("split BPlusTreeNode\n");
     int i;
-    DataNode *temp = root->children.dataptr[5];
-    Flight *ptr = temp->lptr;
-
-    //create new Node
     BPlusTreeNode *newNode = createTreeNode();
-    newNode->activeKeys = order/2;
-    newNode->isLeaf = 1;
-    for (i = order/2 + 1; i <= order; i++)
-    {
-        newNode->children.dataptr[i-order/2 -1] = root->children.dataptr[i];
-        newNode->key[i-order/2 -1] = root->key[i];
-        root->children.dataptr[i] = NULL;
-    }
-    printf ("%d", i);
-    newNode->children.dataptr[i-order/2-1] = root->children.dataptr[i];
+    newNode->activeKeys = order / 2;
 
-    newNode->activeKeys = root->activeKeys = order/2;
-    root->children.dataptr[order/2]->next = newNode->children.dataptr[0];
-    newNode->children.dataptr[0]->prev = root->children.dataptr[order/2];
     if (root->parent == NULL)
     {
+        printf ("splitting root");
+        for (i = order / 2 + 1; i <= order; i++)
+        {
+            newNode->children.dataptr[i - order / 2 - 1] = root->children.dataptr[i];
+            newNode->key[i - order / 2 - 1] = root->key[i];
+            root->children.dataptr[i] = NULL;
+        }
+        printf("%d", i);
+        newNode->isLeaf = 1;
+        newNode->children.dataptr[i - order / 2 - 1] = root->children.dataptr[i];
+
+        newNode->activeKeys = root->activeKeys = order / 2;
+        root->children.dataptr[order / 2]->next = newNode->children.dataptr[0];
+        newNode->children.dataptr[0]->prev = root->children.dataptr[order / 2];
+
         BPlusTreeNode *newRoot = createTreeNode();
         newNode->parent = root->parent = newRoot;
-        newRoot->key[0] = root->key[order/2];
+        newRoot->key[0] = root->key[order / 2];
         // printf ("%d:%d ", newRoot->key[0].Hour, newRoot->key[0].Min);
         newRoot->isLeaf = 0;
         newRoot->children.nodeptr[0] = root;
@@ -278,29 +277,45 @@ BPlusTreeNode *splitBPlusTreeNode(BPlusTreeNode *root)
         printTree(newRoot);
     }
 
-    else
+    else if (root->isLeaf == 1)
     {
-        printf ("split nonroot");
+        printf ("splitting leaf");
+        for (i = order / 2 + 1; i <= order; i++)
+        {
+            newNode->children.dataptr[i - order / 2 - 1] = root->children.dataptr[i];
+            newNode->key[i - order / 2 - 1] = root->key[i];
+            root->children.dataptr[i] = NULL;
+        }
+        printf("%d", i);
+        newNode->isLeaf = 1;
+        newNode->children.dataptr[i - order / 2 - 1] = root->children.dataptr[i];
+
+        newNode->activeKeys = root->activeKeys = order / 2;
+        root->children.dataptr[order / 2]->next = newNode->children.dataptr[0];
+        newNode->children.dataptr[0]->prev = root->children.dataptr[order / 2];
+
         BPlusTreeNode *parent = root->parent;
-        i = parent->activeKeys-1;
+        printf (" %d", parent->activeKeys);
+        i = parent->activeKeys - 1;
+        printf ("%d", parent->activeKeys);
         while (i >= 0 && maxTime(parent->key[i], root->key[0]) < 0)
         {
-            parent->key[i+1] = parent->key[i];
-            parent->children.nodeptr[i+2] = parent->children.nodeptr[i+1];
+            parent->key[i + 1] = parent->key[i];
+            parent->children.nodeptr[i + 2] = parent->children.nodeptr[i + 1];
             i--;
         }
         i++;
-        printf ("%d", i);
-        parent->key[i] = root->key[order/2];
+        printf("%d", i);
+        parent->key[i] = root->key[order / 2];
         parent->children.nodeptr[i] = root;
-        parent->children.nodeptr[i+1] = newNode;
+        parent->children.nodeptr[i + 1] = newNode;
         parent->activeKeys++;
-        printf ("\n");
+        printf("\n");
         for (i = 0; i < parent->activeKeys; i++)
         {
-            printf ("%d:%d ", parent->key[i].Hour, parent->key[i].Min);
+            printf("%d:%d ", parent->key[i].Hour, parent->key[i].Min);
         }
-        printf ("\n");
+        printf("\n");
         for (i = 0; i <= parent->activeKeys; i++)
         {
             if (parent->children.nodeptr[i] != NULL)
@@ -308,32 +323,62 @@ BPlusTreeNode *splitBPlusTreeNode(BPlusTreeNode *root)
                 BPlusTreeNode *traversalnode = parent->children.nodeptr[i];
                 for (int j = 0; j < traversalnode->activeKeys; j++)
                 {
-                    printf ("%d:%d ",traversalnode->key[j]);
+                    printf("%d:%d ", traversalnode->key[j]);
                 }
                 for (int j = 0; j <= traversalnode->activeKeys; j++)
                 {
-                    printf ("Now print respective dataNodes: \n");
+                    printf("Now print respective dataNodes: \n");
                     DataNode *dataNodeTraversal = traversalnode->children.dataptr[j];
                     if (dataNodeTraversal != NULL)
                     {
-                        printf ("flighttraversal\n");
+                        printf("flighttraversal\n");
                         Flight *flightTraversal = dataNodeTraversal->lptr;
                         while (flightTraversal != NULL)
                         {
-                            printf ("%d:%d ", flightTraversal->departureTime.Hour, flightTraversal->departureTime.Min);
+                            printf("%d:%d ", flightTraversal->departureTime.Hour, flightTraversal->departureTime.Min);
                             flightTraversal = flightTraversal->next;
                         }
-                        printf ("\n");
-                    } 
+                        printf("\n");
+                    }
                 }
-                printf ("\n");
+                printf("\n");
             }
         }
-        if (parent->activeKeys == order+1)
+    }
+    else
+    {
+        BPlusTreeNode *newNode = createTreeNode();
+        newNode->activeKeys = order/2;
+        newNode->isLeaf = 1;
+        newNode->parent = root->parent;
+        BPlusTreeNode *parent = root->parent;
+
+        for (i = order/2 + 1; i <= order; i++)
         {
-            printf ("here comes the recursion");
-            parent = splitBPlusTreeNode(parent);
+            newNode->children.nodeptr[i-order/2 -1] = root->children.nodeptr[i];
+            newNode->key[i-order/2 -1] = root->key[i];
+            root->children.nodeptr[i] = NULL;
         }
+        newNode->children.nodeptr[i-order/2-1] = root->children.nodeptr[i];
+
+        while (i >= 0 && maxTime(parent->key[i], root->key[0]) < 0)
+        {
+            parent->key[i+1] = parent->key[i];
+            parent->children.nodeptr[i+2] = parent->children.nodeptr[i+1];
+            i--;
+        }
+
+        i++;
+        printf ("%d", i);
+        parent->key[i] = root->key[order/2];
+        parent->children.nodeptr[i] = root;
+        parent->children.nodeptr[i+1] = newNode;
+
+    }
+    if (root->parent->activeKeys == order + 1)
+    {
+        printf("here comes the recursion");
+        root->parent = splitBPlusTreeNode(root->parent);
     }
     return root->parent;
 }
@@ -513,6 +558,304 @@ BPlusTreeNode *insertInbPlusTree(BPlusTreeNode *root, Flight *newNode)
     return root;
 }
 
+BPlusTreeNode *mergeNodes(BPlusTreeNode* iNode, BPlusTreeNode* jNode)
+{
+    printf("\nInside mergeNodes\n");     
+    
+    //Merging i and j Node to form a combined i Node
+            
+    //Merging the leaf Nodes
+    
+    if(iNode->isLeaf==1)
+    {            
+        int k=0, index=0;   
+        // k is iterator and index is used to fill entries in temp 
+        //Copying nodes of iNode to temp so as to compact them
+        
+        printf("From i : ");
+        while(k < iNode->activeKeys)
+        {
+            if(iNode->children.dataptr[k]!=NULL)
+            {
+                iNode->children.dataptr[index] = iNode->children.dataptr[k];
+                printf("%d ",iNode->children.dataptr[index]->size);
+                index++;
+            }
+            k++;
+        }
+
+        k=0;
+        index--;
+
+        //Adding nodes of jNode to temp
+        printf("\nFrom j : ");
+        while(k < jNode->activeKeys)
+        {
+            if(jNode->children.dataptr[k]!=NULL)
+            {
+                if(k==0)
+                {
+                    iNode->children.dataptr[index]->lptr->next = jNode->children.dataptr[k]->lptr;
+                    iNode->children.dataptr[index]->size = iNode->children.dataptr[index]->size + jNode->children.dataptr[k]->size;
+                    if(iNode->children.dataptr[index]->size > order)
+                    {
+                        Flight *firstFlight;
+                        firstFlight = iNode->children.dataptr[index]->lptr;
+                        iNode->children.dataptr[index]->lptr = iNode->children.dataptr[index]->lptr->next;
+                        firstFlight->next = NULL;
+
+                        iNode->children.dataptr[index-1]->lptr->next = firstFlight;
+                    }
+                }
+                else
+                {
+                    iNode->children.dataptr[index] = jNode->children.dataptr[k];
+                }
+                printf("%d=%d ",iNode->children.dataptr[index]->size,jNode->children.dataptr[k]->size);
+                index++;
+            }
+            k++;
+        }
+        iNode->activeKeys = index - 1;
+        printf("\nTemp is ready \n");
+        
+        //Updating keys of temp
+        k=0;
+        Time newKey;
+
+        while(k < iNode->activeKeys && iNode->children.dataptr[k]!=NULL && iNode->children.dataptr[k]->lptr!=NULL)
+        {
+            printf("%d",iNode->children.dataptr[k]->size);
+            printf(" %d ",k);            
+            
+            if(iNode->children.dataptr[k]->lptr->next==NULL)
+            {
+                newKey = iNode->children.dataptr[k]->lptr->departureTime;
+                printf("If cleared\n");
+            }
+            
+            else
+            {
+                printf("Else ");
+                Flight* lastFlight;
+                lastFlight = iNode->children.dataptr[k]->lptr->next;
+                printf("Inside else");    
+                while(lastFlight->next!=NULL)
+                {
+                    lastFlight = lastFlight->next;
+                    printf(" Inside while");
+                }
+
+                newKey = lastFlight->departureTime;
+                printf(" else passed");
+            }
+            printf(" %d key updated\n",k);
+            iNode->key[k] = newKey;
+            k++;
+        }
+        printf("Keys updated\n");
+
+        if(iNode->parent==jNode->parent)
+        {
+            iNode->parent->activeKeys--;
+            if(iNode->parent->activeKeys==1)
+            {
+                printf("Need to merge the parents");
+            }
+        }
+    }    
+    free(jNode);
+    
+    printf("Merge successful!!!!!!!!!!!!\n");
+    return iNode;
+}
+
+void BorrowFromSibling(BPlusTreeNode *root, int i)
+{
+    int found=0;
+    int j = i-1;
+    //checking left sibling
+    
+    if(root->children.dataptr[j]!=NULL && root->children.dataptr[j]->size > 1)
+    {
+        //Sibling found
+        printf("Left Sibling found = %d \n", root->children.dataptr[j]->lptr->flightID);
+        found = 1;
+    }
+
+    if(!found) // Checking Right Siblings
+    {
+        j = i+1;
+        
+        if(root->children.dataptr[j]!=NULL && root->children.dataptr[j]->size > 1)
+        {
+            //Sibling found
+            printf("Right Sibling found = %d\n", root->children.dataptr[j]->lptr->flightID);
+            found = 1;
+        }
+    }
+
+    if(found)
+    {
+        Flight *borrowedFlight,*prev;
+        borrowedFlight = root->children.dataptr[j]->lptr->next;
+        prev = root->children.dataptr[j]->lptr;
+
+        while(borrowedFlight->next!=NULL)
+        {
+            prev = borrowedFlight;
+            borrowedFlight = borrowedFlight->next;
+        }
+        
+        prev->next = NULL;
+        borrowedFlight->prev = NULL;
+        root->children.dataptr[j]->size--;
+        root->children.dataptr[i]->lptr = borrowedFlight;
+        root->children.dataptr[i]->size = 1;
+        //printf(" Borrowed Successfully ");
+        
+        //updating key
+        root->key[(j+1)/2] = borrowedFlight->departureTime;
+        if(j < i)   //borrow from left so drop a minute in key
+        {
+            root->key[(j+1)/2].Min--;
+            if(root->key[(j+1)/2].Min < 0)
+            {
+                root->key[(j+1)/2].Min = root->key[(j+1)/2].Min + 60;
+                root->key[(j+1)/2].Hour--;
+                if(root->key[(j+1)/2].Hour < 0)
+                    root->key[(j+1)/2].Hour = root->key[(j+1)/2].Hour + 24;
+            }
+        }
+    }
+
+    else //Delete the node
+    {
+        if(root->children.dataptr[i]->next != NULL) root->children.dataptr[i]->next->prev = root->children.dataptr[i]->prev;
+        if(root->children.dataptr[i]->prev != NULL) root->children.dataptr[i]->prev->next = root->children.dataptr[i]->next; 
+        
+        free(root->children.dataptr[i]);
+        root->children.dataptr[i]=NULL;
+    }            
+}
+
+BPlusTreeNode *deletionInbplusTree(BPlusTreeNode *root, Flight *node)
+{
+    printf("Inside deletion\n");
+    if(root!=NULL)
+    {
+        printf("Root not null\n");
+        if(root->isLeaf==1)
+        {
+            //Finding the suitable dataNode
+            printf("Root is leaf and ");
+            int i = 0;
+            while (i < root->activeKeys && maxTime(node->departureTime, root->key[i]) == -1) //increment till flight time greater than key
+                i++;
+
+            if(root->children.dataptr[i]->lptr!=NULL)printf("%d:%d %d is Searching key \n",root->key[i].Hour,root->key[i].Min,root->children.dataptr[i]->lptr->flightID);
+            else
+            {
+                printf("-----------------------------------------------------------------------------------------\n");
+                i--;
+            }
+
+            Flight* dataFlights;
+            dataFlights = root->children.dataptr[i]->lptr;
+
+            //Deleting the flight
+            while(dataFlights!=NULL && dataFlights->flightID!=node->flightID)
+                dataFlights = dataFlights->next;
+
+            if(dataFlights==NULL) printf("\nNo such Flight exists\n");
+            else    
+            {
+                //Normal Deletion
+                if(dataFlights->prev!=NULL) dataFlights->prev->next = dataFlights->next;
+                if(dataFlights->next!=NULL) dataFlights->next->prev = dataFlights->prev;
+                
+                //If first flight of a dataNode is deleted
+                if(root->children.dataptr[i]->lptr==dataFlights) root->children.dataptr[i]->lptr=dataFlights->next; 
+                printf("Flight deleted!!!!!!!!!!!!!!!!!!!!!");
+                free(dataFlights);
+                root->children.dataptr[i]->size--;
+
+                //If dataNode becomes empty
+                if(root->children.dataptr[i]->size==0)
+                {
+                    printf("\nDataNode is empty\n");
+
+                    // if(root->children.dataptr[i]->next != NULL) root->children.dataptr[i]->next->prev = root->children.dataptr[i]->prev;
+                    // if(root->children.dataptr[i]->prev != NULL) root->children.dataptr[i]->prev->next = root->children.dataptr[i]->next; 
+                    // free(root->children.dataptr[i]);
+                    // root->children.dataptr[i]=NULL;
+
+                    BorrowFromSibling(root,i); 
+                    
+                    if (root->children.dataptr[i]==NULL)
+                    {
+                        //Merge with neighbour leaf
+                        printf("Merging Nodes*******************************************************\n");
+                        
+                        if(root->parent!=NULL && root->parent->activeKeys >= 2)
+                        {
+                            i = 0;
+                            while(i < root->parent->activeKeys && root->parent->children.nodeptr[i]!=root)
+                                i++;
+
+                            if(i < root->parent->activeKeys)
+                            {
+                                //merge with right 
+                                int j = i+1;
+            
+                                BPlusTreeNode *iNode, *jNode;
+                                iNode = root->parent->children.nodeptr[i];
+                                jNode = root->parent->children.nodeptr[j];
+                                printf(" Merging with right neighbour ");
+                                int k = 0;
+                                printf("\nFrom j : ");
+                                while(k < jNode->activeKeys)
+                                {
+                                    printf("%d ",jNode->children.dataptr[k]->size);
+                                    k++;
+                                }        
+                                root = mergeNodes(iNode,jNode);
+                            }
+                            else if(i>0)
+                            {
+                                //merge with left neighbour
+                                int j = i-1;
+
+                                BPlusTreeNode *iNode, *jNode;
+                                iNode = root->parent->children.nodeptr[i];
+                                jNode = root->parent->children.nodeptr[j];
+                                printf(" Merging with Left neighbour ");
+                                root = mergeNodes(jNode,iNode); 
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        else //Don't know why but this always fails when i = 1 just like printTree
+        {
+            //Finding the suitable pointer
+            printf("Traverse to Leaf");
+            
+            int i = 0;
+            while (i < root->activeKeys && maxTime(node->departureTime, root->key[i]) == (-1))
+                i++;
+            if(root->children.nodeptr[i]==NULL) i--;
+            else printf(" %d:%d*********************************************************\n",root->children.nodeptr[i]->key[0].Hour,root->children.nodeptr[i]->key[0].Min);
+            printf("%d++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++",i);
+            root->children.nodeptr[i] = deletionInbplusTree(root->children.nodeptr[i], node);
+        }
+    }
+    
+    return root;
+}
+
 Bucket *createBucket(Flight *flight)
 {
     Bucket *new = (Bucket *)malloc(sizeof(Bucket));
@@ -578,7 +921,7 @@ Bucket *insert(Bucket *firstBucket, Flight *flight)
     return firstBucket;
 }
 
-int searchForFlight (BPlusTreeNode *root, int ID)
+Flight *searchForFlight (BPlusTreeNode *root, int ID)
 {
     if (root->isLeaf != 1)
     {
@@ -594,29 +937,31 @@ int searchForFlight (BPlusTreeNode *root, int ID)
             if (flightPtr->flightID == ID)
             {
                 printf ("The flight departed at %d:%d and is expected to arrive at %d:%d ",flightPtr->departureTime.Hour, flightPtr->departureTime.Min, flightPtr->ETA.Hour, flightPtr->ETA.Min);
-                return 1;
+                return flightPtr;
             }
             flightPtr = flightPtr->next;
         }
         Node = Node->next;
     }
-    return 0;
+    return NULL;
 }
 
-void checkStatus (Bucket *firstBucket)
+Flight *checkStatus (Bucket *firstBucket)
 {
     Bucket *bucketPtr = firstBucket;
     printf ("Enter flightID: ");
     int ID;
     scanf ("%d", &ID);
     int found = 0;
+    Flight *flight;
     while (bucketPtr != NULL && found == 0)
     {
         //search inside the bucket
         //this needs to be taken care
         if (bucketPtr->root != NULL)
         {
-            if (searchForFlight(bucketPtr->root, ID))
+            flight = searchForFlight(bucketPtr->root, ID);
+            if (flight != NULL)
             {
                 found = 1;
             }
@@ -627,6 +972,37 @@ void checkStatus (Bucket *firstBucket)
     {
         printf ("Flight not found");
     }
+    return flight;
+}
+
+Bucket *cancelFlight(Bucket *firstBucket)
+{
+    int ID;
+    printf ("Enter the ID of the flight to be cancelled");
+    scanf ("%d", &ID);
+    Flight *flight = checkStatus (firstBucket);
+    Bucket *bucketPtr = firstBucket;
+    Bucket *prev = firstBucket;
+    while (bucketPtr != NULL && maxTime(flight->departureTime, bucketPtr->endETA) < 0) 
+    {
+        prev = bucketPtr;
+        bucketPtr = bucketPtr->next;
+    }
+    if (bucketPtr == NULL)
+    {
+        printf ("Flight Doesn't exist");
+    }
+    else
+    {
+        bucketPtr->root = deletionInbplusTree(bucketPtr->root, flight);
+    }
+    if (bucketPtr->root == NULL)
+    {
+        prev->next = bucketPtr->next;
+        if (bucketPtr == prev) firstBucket = prev;
+        free (bucketPtr);
+    }
+    return firstBucket;
 }
 
 void rangeSearch(Bucket *firstBucket)
@@ -640,34 +1016,34 @@ void rangeSearch(Bucket *firstBucket)
     if (maxTime (start, end) < 1) printf ("Invalid");
 
     Bucket *bucketPtr = firstBucket;
-    while (bucketPtr!= NULL )
+    while (bucketPtr != NULL )
     {
+        printf ("%d", bucketPtr == NULL);
         BPlusTreeNode *root = bucketPtr->root;
         int flag = 0;
 
-        while (root->isLeaf != 1 && flag == 0)
+        while (root != NULL && root->isLeaf != 1 && flag == 0)
         {
             int i = 0;
             while ( i < root->activeKeys && maxTime(root->key[i], start) > 1) i++;
-            // printf ("%d", i);
             if ( root->children.nodeptr[i] != NULL)
             {
                 root = root->children.nodeptr[i];
             }
             else flag = 1;
         }
-
-        if (flag == 0)
+        
+        if (root != NULL && flag == 0)
         {
             DataNode *Node = root->children.dataptr[0];
 
             while (Node != NULL && flag == 0)
             {
                 Flight *flightPtr = Node->lptr;
-                while (maxTime (flightPtr->departureTime, start) > 0) flightPtr = flightPtr->next;
+                while (flightPtr != NULL && maxTime(flightPtr->departureTime, start) > 0) flightPtr = flightPtr->next;
                 while ( flightPtr != NULL && maxTime(flightPtr->departureTime, end) >= 0) 
                 {
-                    printf ("%d:%d ", flightPtr->departureTime.Hour, flightPtr->departureTime.Min);
+                    printf ("Flight Id: %d, Departure Time %d:%d\n", flightPtr->flightID, flightPtr->departureTime.Hour, flightPtr->departureTime.Min);
                     flightPtr = flightPtr->next;
                 }
                 Node = Node->next;
@@ -686,6 +1062,7 @@ void showMenu(Bucket *firstBucket)
         printf("Select option : ");
         scanf("%d", &option);
         Time temp, deptTime, ETA;
+        Flight *flight;
 
         switch (option)
         {
@@ -716,18 +1093,17 @@ void showMenu(Bucket *firstBucket)
             break;
 
         case 2:
-            printf ("to be implemented"); 
-            // firstBucket = cancelFlight(firstBucket);
+            firstBucket = cancelFlight(firstBucket);
+            printf ("Deleted");
             break;
 
         case 3:
-            printf ("to be implemented"); 
-            checkStatus(firstBucket);
+            flight = checkStatus(firstBucket);
             break;
         case 4:
             rangeSearch(firstBucket);
         }
-    } while (option > 0 && option < 4);
+    } while (option > 0 && option < 5);
 }
 
 
